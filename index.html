@@ -40,8 +40,6 @@
 
         #access-denied-message.show { display: flex; }
 
-        /* [HAPUS VIDEO ELEMENT STYLE] */
-        
         /* ============================== */
         /* === STYLE UTAMA APLIKASI === */
         /* ============================== */
@@ -235,17 +233,16 @@
         const ZOOM_SPEED = 0.05; 
 
         let selectedTwibbon = null;
-        let userPhoto = null; // HANYA MENGGUNAKAN userPhoto (Image)
+        let userPhoto = null; 
         let twibbonFrame = null;
         let isTwibbonLoaded = false;
-        // let animationFrameId = null; // Dihapus karena tidak ada video
         
         let imageState = {
             offsetX: 0, offsetY: 0, scale: 1.0, isDragging: false,
             isPinching: false, initialDistance: 0, lastX: 0, lastY: 0
         };
 
-        let canvas, ctx, downloadBtn, statusMsg, controlTip, floatingScrollPrompt, twibbonContent;
+        let canvas, ctx, downloadBtn, statusMsg, controlTip, floatingScrollPrompt, twibbonContent, photoUploadInput; // PhotoInput diinisialisasi
 
         // =======================================
         // === FUNGSI KONTROL AKSES & DETEKSI ===
@@ -263,7 +260,6 @@
             const mainContent = document.getElementById('mainContent');
             const deniedMessage = document.getElementById('access-denied-message');
             twibbonContent = document.getElementById('twibbonContent'); 
-            // userVideo tidak diinisialisasi
             
             if (isMobileOrTablet()) {
                 mainContent.classList.add('allowed'); 
@@ -276,6 +272,7 @@
                 statusMsg = document.getElementById('statusMessage');
                 controlTip = document.getElementById('controlTip');
                 floatingScrollPrompt = document.getElementById('floatingScrollPrompt');
+                photoUploadInput = document.getElementById('photoUpload'); // Inisialisasi input file
                 
                 canvas.width = CANVAS_WIDTH;
                 canvas.height = CANVAS_HEIGHT;
@@ -290,7 +287,7 @@
         });
         
         // ===================================
-        // === FUNGSI PEMILIHAN TWIBBON ===
+        // === FUNGSI PEMILIHAN TWIBBON (FIX) ===
         // ===================================
 
         function selectTwibbon(key) {
@@ -306,7 +303,11 @@
 
             // Reset media state agar tampilan canvas bersih
             userPhoto = null;
-            // Tidak perlu reset video
+            
+            // ✅ PERBAIKAN KRUSIAL: Reset nilai input file
+            if (photoUploadInput) {
+                photoUploadInput.value = ''; 
+            }
             
             // Pasang Event Listener hanya sekali setelah Twibbon pertama dipilih
             if (!canvas.listenersInitialized) {
@@ -349,9 +350,6 @@
         // === FUNGSI UTAMA DRAW (HANYA FOTO) ===
         // ==========================================
 
-        // Fungsi animateCanvas() dihapus total karena hanya gambar
-        // function animateCanvas() { ... }
-
         function drawCombinedImage() {
             if (!ctx) return;
             
@@ -359,7 +357,7 @@
             ctx.fillStyle = '#495057'; 
             ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
             
-            let mediaSource = userPhoto; // Hanya pakai userPhoto
+            let mediaSource = userPhoto; 
             
             if (mediaSource) {
                 const mediaNaturalWidth = userPhoto.width;
@@ -414,9 +412,8 @@
 
             const fileURL = URL.createObjectURL(file);
 
-            // Karena accept hanya image, kita hanya proses sebagai image
             if (file.type.startsWith('image/')) {
-                handleImageFile(fileURL, file.name);
+                handleImageFile(fileURL);
             } else {
                  showMessage("Format file tidak didukung (Hanya Gambar).", true);
             }
@@ -434,8 +431,6 @@
             userPhoto.onerror = () => { showMessage("Gagal memuat foto.", true); }
             userPhoto.src = fileURL;
         }
-
-        // Fungsi handleVideoFile(fileURL) dihapus
 
         function resetImageState(naturalWidth, naturalHeight) {
             const scaleFactorX = CANVAS_WIDTH / naturalWidth;
@@ -491,7 +486,7 @@
             showMessage("Twibbon berhasil diunduh!", false);
         }
         
-        // --- FUNGSI INTERAKSI (DIPERTAHANKAN DAN DIBERSIHKAN DARI LOGIKA VIDEO) ---
+        // --- FUNGSI INTERAKSI (DIPERTAHANKAN) ---
         
         function scrollToDownloadButton() {
             if (!downloadBtn || !floatingScrollPrompt) return;
@@ -521,8 +516,6 @@
             let mediaSource = userPhoto;
             if (!mediaSource) return;
             
-            // Logika pause video dihapus
-
             const rect = canvas.getBoundingClientRect();
             const clientX = event.touches ? event.touches[0].clientX : event.clientX;
             const clientY = event.touches ? event.touches[0].clientY : event.clientY;
@@ -599,15 +592,12 @@
                 imageState.isPinching = false;
                 imageState.initialDistance = 0;
             }
-            // Logika play video dihapus
             drawCombinedImage();
         }
         function handleZoom(event) {
             let mediaSource = userPhoto;
             if (!mediaSource) return;
             
-            // Logika pause video dihapus
-
             event.preventDefault();
 
             const oldScale = imageState.scale;
@@ -634,8 +624,6 @@
                 imageState.scale = newScale;
             }
             drawCombinedImage();
-            
-            // Logika play video dihapus
         }
         function checkScrollPosition() {
             if (!floatingScrollPrompt) return;
